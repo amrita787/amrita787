@@ -1,0 +1,58 @@
+*** Settings ***
+Library           RequestsLibrary
+
+*** Variables ***
+${BASE_URL}            https://httpbin.org
+${INVALID_ENDPOINT}      /invalid-endpoint
+${EXPECTED_NOT_FOUND_CODE}    404
+
+*** Test Cases ***
+Validate Post Request Response Code
+    [Documentation]    Send a POST request and validate the response code.
+    Create Session     my_session   ${BASE_URL}
+    ${form_data}=      Create Dictionary
+    ...                comments=none
+    ...                custemail=priyadarshiniamrita3@gmail.com
+    ...                custname=Priyadarshini Amrita Mishra
+    ...                custtel=07899051306
+    ...                delivery=11:00
+    ...                size=medium
+    ...                topping=bacon
+    ${headers}=        Create Dictionary
+    ...                Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+    ...                Accept-Encoding=gzip, deflate, br, zstd
+    ...                Accept-Language=en-US,en;q=0.9
+    ...                Cache-Control=max-age=0
+    ...                Content-Type=application/x-www-form-urlencoded
+    ...                Origin=https://httpbin.org
+    ...                Referer=https://httpbin.org/forms/post
+    ...                User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0
+    ${response}=       Post Request  my_session  /post  data=${form_data}  headers=${headers}
+    Should Be Equal As Numbers  ${response.status_code}  200
+
+Validate Get Request Response Code
+    [Documentation]    Send a GET request and validate the response code.
+    Create Session     my_session   ${BASE_URL}
+    ${response}=       Get Request  my_session  /
+    Should Be Equal As Numbers  ${response.status_code}  200
+
+Validate Delayed Response
+    [Documentation]    Send a GET request to a delayed endpoint and validate the response code.
+    Create Session     my_session   ${BASE_URL}
+    ${response}=       Get Request  my_session  /delay/3
+    Should Be Equal As Numbers  ${response.status_code}  200
+
+Negative Test Case: Invalid Endpoint
+    [Documentation]    Send a GET request to an invalid endpoint and validate the 404 response code.
+    Create Session     my_session   ${BASE_URL}
+    ${response}=       Get Request  my_session  ${INVALID_ENDPOINT}
+    Should Be Equal As Numbers  ${response.status_code}  ${EXPECTED_NOT_FOUND_CODE}
+
+
+Negative Test Case: Invalid Data
+    [Documentation]    Send a POST request with invalid data and validate the response code.
+    Create Session     my_session   ${BASE_URL}
+    ${invalid_form_data}=    Create Dictionary
+    ...                custemail=invalid-email-format
+    ${response}=       Post Request  my_session  /post  data=${invalid_form_data}
+    Should Be Equal As Numbers  ${response.status_code}  400
